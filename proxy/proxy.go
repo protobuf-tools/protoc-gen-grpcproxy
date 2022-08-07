@@ -6,6 +6,7 @@ package proxy
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/iancoleman/strcase"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -69,9 +70,18 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 			methods[method.GoName] = fmt.Sprintf(`(ctx context.Context, req *%s) (*%s, error)`, input, output)
 		}
 
+		sortMethods := make([]string, len(methods))
+		i := 0
+		for fn := range methods {
+			sortMethods[i] = fn
+			i++
+		}
+		sort.Strings(sortMethods)
+
 		g.P(`// Proxy allows to create `, serviceName, ` proxy servers.`)
 		g.P(`type Proxy struct {`)
-		for fn, args := range methods {
+		for _, fn := range sortMethods {
+			args := methods[fn]
 			g.P(`	`, fn, ` func`, args)
 		}
 		g.P(`}`)
@@ -90,7 +100,9 @@ func GenerateFile(gen *protogen.Plugin, file *protogen.File) *protogen.Generated
 		g.P(`	proxy *Proxy`)
 		g.P(`}`)
 		g.P()
-		for fn, args := range methods {
+		for _, fn := range sortMethods {
+			args := methods[fn]
+
 			g.P(`func (s *`, serverName, `) `, fn, args, ` {`)
 			g.P(`	fn := s.proxy.`, fn)
 			g.P(` 	if fn == nil {`)
