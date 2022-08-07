@@ -58,3 +58,6 @@ bench.txt
 
 # coverage
 coverage.out
+
+# Binaries
+bin/
