@@ -1,0 +1,9 @@
+# protobuf-tools/protoc-gen-proxy project gitattributes file
+#  https://github.com/github/linguist/blob/master/docs/overrides.md
+
+* -text
+
+docs        linguist-documentation
+*.pb.go     linguist-generated
+*gen.go     linguist-generated
+*_string.go linguist-generated
