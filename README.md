@@ -48,8 +48,11 @@ import (
 	context "context"
 	errors "errors"
 	grpc "google.golang.org/grpc"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	net "net"
 )
+
+var _ emptypb.Empty
 
 // Proxy allows to create Echo proxy servers.
 type Proxy struct {
@@ -248,20 +251,20 @@ var _ emptypb.Empty
 
 // Proxy allows to create Spanner proxy servers.
 type Proxy struct {
-	Rollback            func(ctx context.Context, req *RollbackRequest) (*emptypb.Empty, error)
-	PartitionRead       func(ctx context.Context, req *PartitionReadRequest) (*PartitionResponse, error)
-	DeleteSession       func(ctx context.Context, req *DeleteSessionRequest) (*emptypb.Empty, error)
-	ExecuteSql          func(ctx context.Context, req *ExecuteSqlRequest) (*ResultSet, error)
-	ExecuteStreamingSql func(ctx context.Context, req *ExecuteSqlRequest) (*PartialResultSet, error)
-	Read                func(ctx context.Context, req *ReadRequest) (*ResultSet, error)
+	BatchCreateSessions func(ctx context.Context, req *BatchCreateSessionsRequest) (*BatchCreateSessionsResponse, error)
+	BeginTransaction    func(ctx context.Context, req *BeginTransactionRequest) (*Transaction, error)
 	Commit              func(ctx context.Context, req *CommitRequest) (*CommitResponse, error)
 	CreateSession       func(ctx context.Context, req *CreateSessionRequest) (*Session, error)
-	BeginTransaction    func(ctx context.Context, req *BeginTransactionRequest) (*Transaction, error)
-	PartitionQuery      func(ctx context.Context, req *PartitionQueryRequest) (*PartitionResponse, error)
-	BatchCreateSessions func(ctx context.Context, req *BatchCreateSessionsRequest) (*BatchCreateSessionsResponse, error)
+	DeleteSession       func(ctx context.Context, req *DeleteSessionRequest) (*emptypb.Empty, error)
+	ExecuteBatchDml     func(ctx context.Context, req *ExecuteBatchDmlRequest) (*ExecuteBatchDmlResponse, error)
+	ExecuteSql          func(ctx context.Context, req *ExecuteSqlRequest) (*ResultSet, error)
+	ExecuteStreamingSql func(ctx context.Context, req *ExecuteSqlRequest) (*PartialResultSet, error)
 	GetSession          func(ctx context.Context, req *GetSessionRequest) (*Session, error)
 	ListSessions        func(ctx context.Context, req *ListSessionsRequest) (*ListSessionsResponse, error)
-	ExecuteBatchDml     func(ctx context.Context, req *ExecuteBatchDmlRequest) (*ExecuteBatchDmlResponse, error)
+	PartitionQuery      func(ctx context.Context, req *PartitionQueryRequest) (*PartitionResponse, error)
+	PartitionRead       func(ctx context.Context, req *PartitionReadRequest) (*PartitionResponse, error)
+	Read                func(ctx context.Context, req *ReadRequest) (*ResultSet, error)
+	Rollback            func(ctx context.Context, req *RollbackRequest) (*emptypb.Empty, error)
 	StreamingRead       func(ctx context.Context, req *ReadRequest) (*PartialResultSet, error)
 }
 
@@ -279,8 +282,8 @@ type spannerServer struct {
 	proxy *Proxy
 }
 
-func (s *spannerServer) CreateSession(ctx context.Context, req *CreateSessionRequest) (*Session, error) {
-	fn := s.proxy.CreateSession
+func (s *spannerServer) BatchCreateSessions(ctx context.Context, req *BatchCreateSessionsRequest) (*BatchCreateSessionsResponse, error) {
+	fn := s.proxy.BatchCreateSessions
 	if fn == nil {
 		return nil, errNotSupported
 	}
@@ -297,60 +300,6 @@ func (s *spannerServer) BeginTransaction(ctx context.Context, req *BeginTransact
 	return fn(ctx, req)
 }
 
-func (s *spannerServer) PartitionQuery(ctx context.Context, req *PartitionQueryRequest) (*PartitionResponse, error) {
-	fn := s.proxy.PartitionQuery
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) StreamingRead(ctx context.Context, req *ReadRequest) (*PartialResultSet, error) {
-	fn := s.proxy.StreamingRead
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) BatchCreateSessions(ctx context.Context, req *BatchCreateSessionsRequest) (*BatchCreateSessionsResponse, error) {
-	fn := s.proxy.BatchCreateSessions
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) GetSession(ctx context.Context, req *GetSessionRequest) (*Session, error) {
-	fn := s.proxy.GetSession
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) ListSessions(ctx context.Context, req *ListSessionsRequest) (*ListSessionsResponse, error) {
-	fn := s.proxy.ListSessions
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) ExecuteBatchDml(ctx context.Context, req *ExecuteBatchDmlRequest) (*ExecuteBatchDmlResponse, error) {
-	fn := s.proxy.ExecuteBatchDml
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
 func (s *spannerServer) Commit(ctx context.Context, req *CommitRequest) (*CommitResponse, error) {
 	fn := s.proxy.Commit
 	if fn == nil {
@@ -360,17 +309,8 @@ func (s *spannerServer) Commit(ctx context.Context, req *CommitRequest) (*Commit
 	return fn(ctx, req)
 }
 
-func (s *spannerServer) Rollback(ctx context.Context, req *RollbackRequest) (*emptypb.Empty, error) {
-	fn := s.proxy.Rollback
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) PartitionRead(ctx context.Context, req *PartitionReadRequest) (*PartitionResponse, error) {
-	fn := s.proxy.PartitionRead
+func (s *spannerServer) CreateSession(ctx context.Context, req *CreateSessionRequest) (*Session, error) {
+	fn := s.proxy.CreateSession
 	if fn == nil {
 		return nil, errNotSupported
 	}
@@ -380,6 +320,15 @@ func (s *spannerServer) PartitionRead(ctx context.Context, req *PartitionReadReq
 
 func (s *spannerServer) DeleteSession(ctx context.Context, req *DeleteSessionRequest) (*emptypb.Empty, error) {
 	fn := s.proxy.DeleteSession
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) ExecuteBatchDml(ctx context.Context, req *ExecuteBatchDmlRequest) (*ExecuteBatchDmlResponse, error) {
+	fn := s.proxy.ExecuteBatchDml
 	if fn == nil {
 		return nil, errNotSupported
 	}
@@ -405,8 +354,62 @@ func (s *spannerServer) ExecuteStreamingSql(ctx context.Context, req *ExecuteSql
 	return fn(ctx, req)
 }
 
+func (s *spannerServer) GetSession(ctx context.Context, req *GetSessionRequest) (*Session, error) {
+	fn := s.proxy.GetSession
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) ListSessions(ctx context.Context, req *ListSessionsRequest) (*ListSessionsResponse, error) {
+	fn := s.proxy.ListSessions
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) PartitionQuery(ctx context.Context, req *PartitionQueryRequest) (*PartitionResponse, error) {
+	fn := s.proxy.PartitionQuery
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) PartitionRead(ctx context.Context, req *PartitionReadRequest) (*PartitionResponse, error) {
+	fn := s.proxy.PartitionRead
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
 func (s *spannerServer) Read(ctx context.Context, req *ReadRequest) (*ResultSet, error) {
 	fn := s.proxy.Read
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) Rollback(ctx context.Context, req *RollbackRequest) (*emptypb.Empty, error) {
+	fn := s.proxy.Rollback
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) StreamingRead(ctx context.Context, req *ReadRequest) (*PartialResultSet, error) {
+	fn := s.proxy.StreamingRead
 	if fn == nil {
 		return nil, errNotSupported
 	}
