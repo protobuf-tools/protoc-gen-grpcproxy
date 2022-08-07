@@ -87,32 +87,7 @@ syntax = "proto3";
 
 package google.spanner.v1;
 
-import "google/api/annotations.proto";
-import "google/api/client.proto";
-import "google/api/field_behavior.proto";
-import "google/api/resource.proto";
-import "google/protobuf/empty.proto";
-import "google/protobuf/struct.proto";
-import "google/protobuf/timestamp.proto";
-import "google/rpc/status.proto";
-import public "google/spanner/v1/commit_response.proto";
-import "google/spanner/v1/keys.proto";
-import "google/spanner/v1/mutation.proto";
-import "google/spanner/v1/result_set.proto";
-import "google/spanner/v1/transaction.proto";
-import "google/spanner/v1/type.proto";
-
-option csharp_namespace = "Google.Cloud.Spanner.V1";
-option go_package = "google.golang.org/genproto/googleapis/spanner/v1;spanner";
-option java_multiple_files = true;
-option java_outer_classname = "SpannerProto";
-option java_package = "com.google.spanner.v1";
-option php_namespace = "Google\\Cloud\\Spanner\\V1";
-option ruby_package = "Google::Cloud::Spanner::V1";
-option (google.api.resource_definition) = {
-  type: "spanner.googleapis.com/Database"
-  pattern: "projects/{project}/instances/{instance}/databases/{database}"
-};
+// omit ...
 
 // Cloud Spanner API
 //
@@ -124,25 +99,7 @@ service Spanner {
       "https://www.googleapis.com/auth/cloud-platform,"
       "https://www.googleapis.com/auth/spanner.data";
 
-  // Creates a new session. A session can be used to perform
-  // transactions that read and/or modify data in a Cloud Spanner database.
-  // Sessions are meant to be reused for many consecutive
-  // transactions.
-  //
-  // Sessions can only execute one transaction at a time. To execute
-  // multiple concurrent read-write/write-only transactions, create
-  // multiple sessions. Note that standalone reads and queries use a
-  // transaction internally, and count toward the one transaction
-  // limit.
-  //
-  // Active sessions use additional server resources, so it is a good idea to
-  // delete idle and unneeded sessions.
-  // Aside from explicit deletes, Cloud Spanner may delete sessions for which no
-  // operations are sent for more than an hour. If a session is deleted,
-  // requests to it return `NOT_FOUND`.
-  //
-  // Idle sessions can be kept alive by sending a trivial SQL query
-  // periodically, e.g., `"SELECT 1"`.
+  // omit...
   rpc CreateSession(CreateSessionRequest) returns (Session) {
     option (google.api.http) = {
       post: "/v1/{database=projects/*/instances/*/databases/*}/sessions"
@@ -151,10 +108,7 @@ service Spanner {
     option (google.api.method_signature) = "database";
   }
 
-  // Creates multiple new sessions.
-  //
-  // This API can be used to initialize a session cache on the clients.
-  // See https://goo.gl/TgSFN2 for best practices on session cache management.
+  // omit...
   rpc BatchCreateSessions(BatchCreateSessionsRequest) returns (BatchCreateSessionsResponse) {
     option (google.api.http) = {
       post: "/v1/{database=projects/*/instances/*/databases/*}/sessions:batchCreate"
@@ -163,9 +117,7 @@ service Spanner {
     option (google.api.method_signature) = "database,session_count";
   }
 
-  // Gets a session. Returns `NOT_FOUND` if the session does not exist.
-  // This is mainly useful for determining whether a session is still
-  // alive.
+  // omit...
   rpc GetSession(GetSessionRequest) returns (Session) {
     option (google.api.http) = {
       get: "/v1/{name=projects/*/instances/*/databases/*/sessions/*}"
@@ -173,7 +125,7 @@ service Spanner {
     option (google.api.method_signature) = "name";
   }
 
-  // Lists all sessions in a given database.
+  // omit...
   rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse) {
     option (google.api.http) = {
       get: "/v1/{database=projects/*/instances/*/databases/*}/sessions"
@@ -181,9 +133,7 @@ service Spanner {
     option (google.api.method_signature) = "database";
   }
 
-  // Ends a session, releasing server resources associated with it. This will
-  // asynchronously trigger cancellation of any operations that are running with
-  // this session.
+  // omit...
   rpc DeleteSession(DeleteSessionRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/v1/{name=projects/*/instances/*/databases/*/sessions/*}"
@@ -191,17 +141,7 @@ service Spanner {
     option (google.api.method_signature) = "name";
   }
 
-  // Executes an SQL statement, returning all results in a single reply. This
-  // method cannot be used to return a result set larger than 10 MiB;
-  // if the query yields more data than that, the query fails with
-  // a `FAILED_PRECONDITION` error.
-  //
-  // Operations inside read-write transactions might return `ABORTED`. If
-  // this occurs, the application should restart the transaction from
-  // the beginning. See [Transaction][google.spanner.v1.Transaction] for more details.
-  //
-  // Larger result sets can be fetched in streaming fashion by calling
-  // [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql] instead.
+  // omit...
   rpc ExecuteSql(ExecuteSqlRequest) returns (ResultSet) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeSql"
@@ -209,11 +149,7 @@ service Spanner {
     };
   }
 
-  // Like [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql], except returns the result
-  // set as a stream. Unlike [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql], there
-  // is no limit on the size of the returned result set. However, no
-  // individual row in the result set can exceed 100 MiB, and no
-  // column value can exceed 10 MiB.
+  // omit...
   rpc ExecuteStreamingSql(ExecuteSqlRequest) returns (stream PartialResultSet) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeStreamingSql"
@@ -221,17 +157,7 @@ service Spanner {
     };
   }
 
-  // Executes a batch of SQL DML statements. This method allows many statements
-  // to be run with lower latency than submitting them sequentially with
-  // [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql].
-  //
-  // Statements are executed in sequential order. A request can succeed even if
-  // a statement fails. The [ExecuteBatchDmlResponse.status][google.spanner.v1.ExecuteBatchDmlResponse.status] field in the
-  // response provides information about the statement that failed. Clients must
-  // inspect this field to determine whether an error occurred.
-  //
-  // Execution stops after the first failed statement; the remaining statements
-  // are not executed.
+  // omit...
   rpc ExecuteBatchDml(ExecuteBatchDmlRequest) returns (ExecuteBatchDmlResponse) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeBatchDml"
@@ -239,19 +165,7 @@ service Spanner {
     };
   }
 
-  // Reads rows from the database using key lookups and scans, as a
-  // simple key/value style alternative to
-  // [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql].  This method cannot be used to
-  // return a result set larger than 10 MiB; if the read matches more
-  // data than that, the read fails with a `FAILED_PRECONDITION`
-  // error.
-  //
-  // Reads inside read-write transactions might return `ABORTED`. If
-  // this occurs, the application should restart the transaction from
-  // the beginning. See [Transaction][google.spanner.v1.Transaction] for more details.
-  //
-  // Larger result sets can be yielded in streaming fashion by calling
-  // [StreamingRead][google.spanner.v1.Spanner.StreamingRead] instead.
+  // omit...
   rpc Read(ReadRequest) returns (ResultSet) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:read"
@@ -259,11 +173,7 @@ service Spanner {
     };
   }
 
-  // Like [Read][google.spanner.v1.Spanner.Read], except returns the result set as a
-  // stream. Unlike [Read][google.spanner.v1.Spanner.Read], there is no limit on the
-  // size of the returned result set. However, no individual row in
-  // the result set can exceed 100 MiB, and no column value can exceed
-  // 10 MiB.
+  // omit...
   rpc StreamingRead(ReadRequest) returns (stream PartialResultSet) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:streamingRead"
@@ -271,10 +181,7 @@ service Spanner {
     };
   }
 
-  // Begins a new transaction. This step can often be skipped:
-  // [Read][google.spanner.v1.Spanner.Read], [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
-  // [Commit][google.spanner.v1.Spanner.Commit] can begin a new transaction as a
-  // side-effect.
+  // omit...
   rpc BeginTransaction(BeginTransactionRequest) returns (Transaction) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:beginTransaction"
@@ -283,20 +190,7 @@ service Spanner {
     option (google.api.method_signature) = "session,options";
   }
 
-  // Commits a transaction. The request includes the mutations to be
-  // applied to rows in the database.
-  //
-  // `Commit` might return an `ABORTED` error. This can occur at any time;
-  // commonly, the cause is conflicts with concurrent
-  // transactions. However, it can also happen for a variety of other
-  // reasons. If `Commit` returns `ABORTED`, the caller should re-attempt
-  // the transaction from the beginning, re-using the same session.
-  //
-  // On very rare occasions, `Commit` might return `UNKNOWN`. This can happen,
-  // for example, if the client job experiences a 1+ hour networking failure.
-  // At that point, Cloud Spanner has lost track of the transaction outcome and
-  // we recommend that you perform another read from the database to see the
-  // state of things as they are now.
+  // omit...
   rpc Commit(CommitRequest) returns (CommitResponse) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:commit"
@@ -306,14 +200,7 @@ service Spanner {
     option (google.api.method_signature) = "session,single_use_transaction,mutations";
   }
 
-  // Rolls back a transaction, releasing any locks it holds. It is a good
-  // idea to call this for any transaction that includes one or more
-  // [Read][google.spanner.v1.Spanner.Read] or [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] requests and
-  // ultimately decides not to commit.
-  //
-  // `Rollback` returns `OK` if it successfully aborts the transaction, the
-  // transaction was already aborted, or the transaction is not
-  // found. `Rollback` never returns `ABORTED`.
+  // omit...
   rpc Rollback(RollbackRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:rollback"
@@ -322,17 +209,7 @@ service Spanner {
     option (google.api.method_signature) = "session,transaction_id";
   }
 
-  // Creates a set of partition tokens that can be used to execute a query
-  // operation in parallel.  Each of the returned partition tokens can be used
-  // by [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql] to specify a subset
-  // of the query result to read.  The same session and read-only transaction
-  // must be used by the PartitionQueryRequest used to create the
-  // partition tokens and the ExecuteSqlRequests that use the partition tokens.
-  //
-  // Partition tokens become invalid when the session used to create them
-  // is deleted, is idle for too long, begins a new transaction, or becomes too
-  // old.  When any of these happen, it is not possible to resume the query, and
-  // the whole operation must be restarted from the beginning.
+  // omit...
   rpc PartitionQuery(PartitionQueryRequest) returns (PartitionResponse) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:partitionQuery"
@@ -340,19 +217,7 @@ service Spanner {
     };
   }
 
-  // Creates a set of partition tokens that can be used to execute a read
-  // operation in parallel.  Each of the returned partition tokens can be used
-  // by [StreamingRead][google.spanner.v1.Spanner.StreamingRead] to specify a subset of the read
-  // result to read.  The same session and read-only transaction must be used by
-  // the PartitionReadRequest used to create the partition tokens and the
-  // ReadRequests that use the partition tokens.  There are no ordering
-  // guarantees on rows returned among the returned partition tokens, or even
-  // within each individual StreamingRead call issued with a partition_token.
-  //
-  // Partition tokens become invalid when the session used to create them
-  // is deleted, is idle for too long, begins a new transaction, or becomes too
-  // old.  When any of these happen, it is not possible to resume the read, and
-  // the whole operation must be restarted from the beginning.
+  // omit...
   rpc PartitionRead(PartitionReadRequest) returns (PartitionResponse) {
     option (google.api.http) = {
       post: "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:partitionRead"
@@ -375,26 +240,29 @@ import (
 	context "context"
 	errors "errors"
 	grpc "google.golang.org/grpc"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	net "net"
 )
 
+var _ emptypb.Empty
+
 // Proxy allows to create Spanner proxy servers.
 type Proxy struct {
-	Read                func(ctx context.Context, req *ReadRequest) (*ResultSet, error)
-	StreamingRead       func(ctx context.Context, req *ReadRequest) (*PartialResultSet, error)
-	BatchCreateSessions func(ctx context.Context, req *BatchCreateSessionsRequest) (*BatchCreateSessionsResponse, error)
-	DeleteSession       func(ctx context.Context, req *DeleteSessionRequest) (*Empty, error)
-	ExecuteSql          func(ctx context.Context, req *ExecuteSqlRequest) (*ResultSet, error)
-	ExecuteBatchDml     func(ctx context.Context, req *ExecuteBatchDmlRequest) (*ExecuteBatchDmlResponse, error)
-	Rollback            func(ctx context.Context, req *RollbackRequest) (*Empty, error)
+	Rollback            func(ctx context.Context, req *RollbackRequest) (*emptypb.Empty, error)
 	PartitionRead       func(ctx context.Context, req *PartitionReadRequest) (*PartitionResponse, error)
+	DeleteSession       func(ctx context.Context, req *DeleteSessionRequest) (*emptypb.Empty, error)
+	ExecuteSql          func(ctx context.Context, req *ExecuteSqlRequest) (*ResultSet, error)
+	ExecuteStreamingSql func(ctx context.Context, req *ExecuteSqlRequest) (*PartialResultSet, error)
+	Read                func(ctx context.Context, req *ReadRequest) (*ResultSet, error)
+	Commit              func(ctx context.Context, req *CommitRequest) (*CommitResponse, error)
 	CreateSession       func(ctx context.Context, req *CreateSessionRequest) (*Session, error)
+	BeginTransaction    func(ctx context.Context, req *BeginTransactionRequest) (*Transaction, error)
+	PartitionQuery      func(ctx context.Context, req *PartitionQueryRequest) (*PartitionResponse, error)
+	BatchCreateSessions func(ctx context.Context, req *BatchCreateSessionsRequest) (*BatchCreateSessionsResponse, error)
 	GetSession          func(ctx context.Context, req *GetSessionRequest) (*Session, error)
 	ListSessions        func(ctx context.Context, req *ListSessionsRequest) (*ListSessionsResponse, error)
-	ExecuteStreamingSql func(ctx context.Context, req *ExecuteSqlRequest) (*PartialResultSet, error)
-	BeginTransaction    func(ctx context.Context, req *BeginTransactionRequest) (*Transaction, error)
-	Commit              func(ctx context.Context, req *CommitRequest) (*CommitResponse, error)
-	PartitionQuery      func(ctx context.Context, req *PartitionQueryRequest) (*PartitionResponse, error)
+	ExecuteBatchDml     func(ctx context.Context, req *ExecuteBatchDmlRequest) (*ExecuteBatchDmlResponse, error)
+	StreamingRead       func(ctx context.Context, req *ReadRequest) (*PartialResultSet, error)
 }
 
 // Serve starts serving the proxy server on the given listener with the specified options.
@@ -411,8 +279,26 @@ type spannerServer struct {
 	proxy *Proxy
 }
 
-func (s *spannerServer) Read(ctx context.Context, req *ReadRequest) (*ResultSet, error) {
-	fn := s.proxy.Read
+func (s *spannerServer) CreateSession(ctx context.Context, req *CreateSessionRequest) (*Session, error) {
+	fn := s.proxy.CreateSession
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) BeginTransaction(ctx context.Context, req *BeginTransactionRequest) (*Transaction, error) {
+	fn := s.proxy.BeginTransaction
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) PartitionQuery(ctx context.Context, req *PartitionQueryRequest) (*PartitionResponse, error) {
+	fn := s.proxy.PartitionQuery
 	if fn == nil {
 		return nil, errNotSupported
 	}
@@ -438,6 +324,24 @@ func (s *spannerServer) BatchCreateSessions(ctx context.Context, req *BatchCreat
 	return fn(ctx, req)
 }
 
+func (s *spannerServer) GetSession(ctx context.Context, req *GetSessionRequest) (*Session, error) {
+	fn := s.proxy.GetSession
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) ListSessions(ctx context.Context, req *ListSessionsRequest) (*ListSessionsResponse, error) {
+	fn := s.proxy.ListSessions
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
 func (s *spannerServer) ExecuteBatchDml(ctx context.Context, req *ExecuteBatchDmlRequest) (*ExecuteBatchDmlResponse, error) {
 	fn := s.proxy.ExecuteBatchDml
 	if fn == nil {
@@ -447,7 +351,16 @@ func (s *spannerServer) ExecuteBatchDml(ctx context.Context, req *ExecuteBatchDm
 	return fn(ctx, req)
 }
 
-func (s *spannerServer) Rollback(ctx context.Context, req *RollbackRequest) (*Empty, error) {
+func (s *spannerServer) Commit(ctx context.Context, req *CommitRequest) (*CommitResponse, error) {
+	fn := s.proxy.Commit
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) Rollback(ctx context.Context, req *RollbackRequest) (*emptypb.Empty, error) {
 	fn := s.proxy.Rollback
 	if fn == nil {
 		return nil, errNotSupported
@@ -456,7 +369,16 @@ func (s *spannerServer) Rollback(ctx context.Context, req *RollbackRequest) (*Em
 	return fn(ctx, req)
 }
 
-func (s *spannerServer) DeleteSession(ctx context.Context, req *DeleteSessionRequest) (*Empty, error) {
+func (s *spannerServer) PartitionRead(ctx context.Context, req *PartitionReadRequest) (*PartitionResponse, error) {
+	fn := s.proxy.PartitionRead
+	if fn == nil {
+		return nil, errNotSupported
+	}
+
+	return fn(ctx, req)
+}
+
+func (s *spannerServer) DeleteSession(ctx context.Context, req *DeleteSessionRequest) (*emptypb.Empty, error) {
 	fn := s.proxy.DeleteSession
 	if fn == nil {
 		return nil, errNotSupported
@@ -474,15 +396,6 @@ func (s *spannerServer) ExecuteSql(ctx context.Context, req *ExecuteSqlRequest) 
 	return fn(ctx, req)
 }
 
-func (s *spannerServer) ListSessions(ctx context.Context, req *ListSessionsRequest) (*ListSessionsResponse, error) {
-	fn := s.proxy.ListSessions
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
 func (s *spannerServer) ExecuteStreamingSql(ctx context.Context, req *ExecuteSqlRequest) (*PartialResultSet, error) {
 	fn := s.proxy.ExecuteStreamingSql
 	if fn == nil {
@@ -492,53 +405,8 @@ func (s *spannerServer) ExecuteStreamingSql(ctx context.Context, req *ExecuteSql
 	return fn(ctx, req)
 }
 
-func (s *spannerServer) BeginTransaction(ctx context.Context, req *BeginTransactionRequest) (*Transaction, error) {
-	fn := s.proxy.BeginTransaction
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) Commit(ctx context.Context, req *CommitRequest) (*CommitResponse, error) {
-	fn := s.proxy.Commit
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) PartitionQuery(ctx context.Context, req *PartitionQueryRequest) (*PartitionResponse, error) {
-	fn := s.proxy.PartitionQuery
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) PartitionRead(ctx context.Context, req *PartitionReadRequest) (*PartitionResponse, error) {
-	fn := s.proxy.PartitionRead
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) CreateSession(ctx context.Context, req *CreateSessionRequest) (*Session, error) {
-	fn := s.proxy.CreateSession
-	if fn == nil {
-		return nil, errNotSupported
-	}
-
-	return fn(ctx, req)
-}
-
-func (s *spannerServer) GetSession(ctx context.Context, req *GetSessionRequest) (*Session, error) {
-	fn := s.proxy.GetSession
+func (s *spannerServer) Read(ctx context.Context, req *ReadRequest) (*ResultSet, error) {
+	fn := s.proxy.Read
 	if fn == nil {
 		return nil, errNotSupported
 	}
