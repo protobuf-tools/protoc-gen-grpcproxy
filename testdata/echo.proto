@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package echo.v1;
+
+option go_package = "github.com/protobuf-tools/protoc-gen-proxy/testdata/v1/echo";
+
+service Echo {
+  rpc Say(SayRequest) returns (SayResponse) {};
+}
+
+// SayRequest request of Say.
+message SayRequest {
+  // The ID of the request message.
+  string message_id = 1;
+
+  // The body of the request message.
+  string message_body = 2;
+}
+
+// SayResponse response of Say.
+message SayResponse {
+  // The ID of the response message.
+  string message_id = 1;
+
+  // The body of the response message.
+  string message_body = 2;
+}
+
