@@ -84,7 +84,7 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		}
 		sort.Strings(sortMethods)
 
-		g.P(`var errNotSupported = errors.New("operation not supported")`)
+		g.P(`var ErrNotSupported = errors.New("operation not supported")`)
 		g.P()
 		g.P(`type `, serverName, ` struct {`)
 		g.P(`	proxy *Proxy`)
@@ -95,7 +95,7 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 			g.P(`func (s *`, serverName, `) `, fn, args, ` {`)
 			g.P(`	fn := s.proxy.`, fn)
 			g.P(` 	if fn == nil {`)
-			g.P(` 		return nil, errNotSupported`)
+			g.P(` 		return nil, ErrNotSupported`)
 			g.P(` 	}`)
 			g.P()
 			g.P(`return fn(ctx, req)`)
