@@ -63,15 +63,19 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		for _, method := range service.Methods {
 			input := method.Input.GoIdent.GoName
 			output := method.Output.GoIdent.GoName
+
+			// handle emptypb
 			if input == "Empty" {
 				input = "emptypb.Empty"
 			}
 			if output == "Empty" {
 				output = "emptypb.Empty"
 			}
+
 			methods[method.GoName] = fmt.Sprintf(`(ctx context.Context, req *%s) (*%s, error)`, input, output)
 		}
 
+		// sort RPC methods
 		sortMethods := make([]string, len(methods))
 		i := 0
 		for fn := range methods {
@@ -80,6 +84,25 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		}
 		sort.Strings(sortMethods)
 
+		g.P(`var errNotSupported = errors.New("operation not supported")`)
+		g.P()
+		g.P(`type `, serverName, ` struct {`)
+		g.P(`	proxy *Proxy`)
+		g.P(`}`)
+		g.P()
+		for _, fn := range sortMethods {
+			args := methods[fn]
+			g.P(`func (s *`, serverName, `) `, fn, args, ` {`)
+			g.P(`	fn := s.proxy.`, fn)
+			g.P(` 	if fn == nil {`)
+			g.P(` 		return nil, errNotSupported`)
+			g.P(` 	}`)
+			g.P()
+			g.P(`return fn(ctx, req)`)
+			g.P(`}`)
+			g.P()
+		}
+		g.P()
 		g.P(`// Proxy allows to create `, serviceName, ` proxy servers.`)
 		g.P(`type Proxy struct {`)
 		for _, fn := range sortMethods {
@@ -95,26 +118,6 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		g.P()
 		g.P(`	return srv.Serve(l)`)
 		g.P(`}`)
-		g.P()
-		g.P(`var errNotSupported = errors.New("operation not supported")`)
-		g.P()
-		g.P(`type `, serverName, ` struct {`)
-		g.P(`	proxy *Proxy`)
-		g.P(`}`)
-		g.P()
-		for _, fn := range sortMethods {
-			args := methods[fn]
-
-			g.P(`func (s *`, serverName, `) `, fn, args, ` {`)
-			g.P(`	fn := s.proxy.`, fn)
-			g.P(` 	if fn == nil {`)
-			g.P(` 		return nil, errNotSupported`)
-			g.P(` 	}`)
-			g.P()
-			g.P(`return fn(ctx, req)`)
-			g.P(`}`)
-			g.P()
-		}
 	}
 
 	return g
