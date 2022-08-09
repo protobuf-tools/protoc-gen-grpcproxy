@@ -16,12 +16,13 @@ func main() {
 	cfg := &proxy.Config{}
 
 	flags := flag.NewFlagSet("protoc-gen-proxy", flag.ExitOnError)
-	flags.BoolVar(&cfg.Standalone, "standalone", false, "standalone mode")
+	flags.BoolVar(&cfg.Standalone, "standalone", false, "standalone mode.")
+	flags.StringVar(&cfg.OutGopath, "out", "", "ouuput gopath. should be standalone mode.")
 
 	opts := protogen.Options{
 		ParamFunc: flags.Set,
 	}
-	opts.Run(func(p *protogen.Plugin) error {
+	pluginFn := func(p *protogen.Plugin) error {
 		for _, f := range p.Files {
 			if f.Generate {
 				proxy.GenerateFile(p, f, cfg)
@@ -29,5 +30,7 @@ func main() {
 		}
 
 		return nil
-	})
+	}
+
+	opts.Run(pluginFn)
 }
