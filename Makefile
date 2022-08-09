@@ -62,6 +62,12 @@ ${GOBIN}/$(notdir ${PKG}):
 
 build: ${GOBIN}/$(notdir ${PKG})  ## Build binary.
 
+##@ proto
+
+.PHONY: protoc
+protoc:
+	PATH=${CURDIR}/bin:$$PATH protoc -I . -I ${HOME}/src/github.com/googleapis/googleapis --go_out=testdata --go-grpc_out=testdata --proxy_out=testdata ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
+
 ##@ test, bench, coverage
 
 .PHONY: test
