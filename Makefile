@@ -78,7 +78,7 @@ protoc: build ${TOOLS_BIN}/protoc-gen-go ${TOOLS_BIN}/protoc-gen-go-grpc
 protoc/standalone: build
 	protoc ${PROTOC_OPTION} \
 		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
-		--proxy_out=standalone=true,out=${PKG}:testdata ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
+		--proxy_out=standalone=true,out=${PKG}:examples ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
 
 ##@ test, bench, coverage
 
