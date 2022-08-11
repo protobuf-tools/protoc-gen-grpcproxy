@@ -19,6 +19,10 @@ ORG_PKG := $(subst /$(notdir $(PKG)),,$(PKG))
 CGO_ENABLED ?= 0
 GO_BUILDTAGS=osusergo netgo static
 GO_LDFLAGS=-s -w
+VERSION=$(shell git rev-list --tags --max-count=1)
+ifneq (${VERSION},)
+GO_LDFLAGS+-X=${PKG}.version=${VERSION}
+endif
 ifeq (${GO_OS},linux)
 GO_LDFLAGS+=-d
 endif
@@ -68,17 +72,24 @@ PROTOC_OPTION = -I . -I ${HOME}/src/github.com/googleapis/googleapis
 
 .PHONY: examples/spanner
 examples/spanner: build ${TOOLS_BIN}/protoc-gen-go ${TOOLS_BIN}/protoc-gen-go-grpc
+	@mkdir -p ${@D}
 	protoc ${PROTOC_OPTION} \
 		--plugin=protoc-gen-go=$(TOOLS_BIN)/protoc-gen-go \
 		--plugin=protoc-gen-go-grpc=$(TOOLS_BIN)/protoc-gen-go-grpc \
 		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
-		--go_out=testdata --go-grpc_out=testdata --proxy_out=testdata ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
+		--go_out=paths=source_relative:examples --go-grpc_out=paths=source_relative:examples --proxy_out=paths=source_relative:examples ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
 
-.PHONY: examples/spanner/standalone
-examples/spanner/standalone: build
+.PHONY: examples/spannerproxy
+examples/spannerproxy: build
+	@rm -rf $@
+	@mkdir -p $@
 	protoc ${PROTOC_OPTION} \
 		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
-		--proxy_out=standalone=true,out=${PKG}:examples ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
+		--proxy_out=paths=source_relative,standalone=true:examples/spannerproxy ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
+	@cd $@/google/spanner/v1; \
+		go mod init > /dev/null 2>&1; \
+		go mod edit -go=1.19 > /dev/null 2>&1; \
+		go mod tidy > /dev/null 2>&1
 
 ##@ test, bench, coverage
 
