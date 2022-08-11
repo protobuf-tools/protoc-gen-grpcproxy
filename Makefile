@@ -36,7 +36,7 @@ GO_BENCH_FLAGS ?= -benchmem
 GO_BENCH_FUNC ?= .
 GO_LINT_FLAGS ?=
 
-TOOLS_DIR := ${CURDIR}/hack/tools
+TOOLS_DIR := ${CURDIR}/tools
 TOOLS_BIN := ${TOOLS_DIR}/bin
 TOOLS = $(shell cd ${TOOLS_DIR}; go list -f '{{ join .Imports " " }}' -tags=tools)
 
@@ -61,6 +61,24 @@ ${GOBIN}/$(notdir ${PKG}):
 	CGO_ENABLED=0 go build -v ${GO_FLAGS} -o ./bin/$(notdir ${PKG}) ${PKG}
 
 build: ${GOBIN}/$(notdir ${PKG})  ## Build binary.
+
+##@ proto
+
+PROTOC_OPTION = -I . -I ${HOME}/src/github.com/googleapis/googleapis
+
+.PHONY: protoc
+protoc: build ${TOOLS_BIN}/protoc-gen-go ${TOOLS_BIN}/protoc-gen-go-grpc
+	protoc ${PROTOC_OPTION} \
+		--plugin=protoc-gen-go=$(TOOLS_BIN)/protoc-gen-go \
+		--plugin=protoc-gen-go-grpc=$(TOOLS_BIN)/protoc-gen-go-grpc \
+		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
+		--go_out=testdata --go-grpc_out=testdata --proxy_out=testdata ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
+
+.PHONY: protoc/standalone
+protoc/standalone: build
+	protoc ${PROTOC_OPTION} \
+		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
+		--proxy_out=standalone=true,out=${PKG}:testdata ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
 
 ##@ test, bench, coverage
 

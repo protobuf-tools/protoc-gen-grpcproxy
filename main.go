@@ -13,19 +13,24 @@ import (
 )
 
 func main() {
-	var flags flag.FlagSet
+	cfg := &proxy.Config{}
 
-	protogen.Options{
+	flags := flag.NewFlagSet("protoc-gen-proxy", flag.ExitOnError)
+	flags.BoolVar(&cfg.Standalone, "standalone", false, "standalone mode.")
+	flags.StringVar(&cfg.Out, "out", "", "output package name for standalone mode.")
+
+	opts := protogen.Options{
 		ParamFunc: flags.Set,
-	}.Run(func(gen *protogen.Plugin) error {
-		gen.SupportedFeatures = proxy.SupportedFeatures
-
-		for _, f := range gen.Files {
+	}
+	pluginFn := func(p *protogen.Plugin) error {
+		for _, f := range p.Files {
 			if f.Generate {
-				proxy.GenerateFile(gen, f)
+				proxy.GenerateFile(p, f, cfg)
 			}
 		}
 
 		return nil
-	})
+	}
+
+	opts.Run(pluginFn)
 }
