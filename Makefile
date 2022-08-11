@@ -62,20 +62,20 @@ ${GOBIN}/$(notdir ${PKG}):
 
 build: ${GOBIN}/$(notdir ${PKG})  ## Build binary.
 
-##@ proto
+##@ examples
 
 PROTOC_OPTION = -I . -I ${HOME}/src/github.com/googleapis/googleapis
 
-.PHONY: protoc
-protoc: build ${TOOLS_BIN}/protoc-gen-go ${TOOLS_BIN}/protoc-gen-go-grpc
+.PHONY: examples/spanner
+examples/spanner: build ${TOOLS_BIN}/protoc-gen-go ${TOOLS_BIN}/protoc-gen-go-grpc
 	protoc ${PROTOC_OPTION} \
 		--plugin=protoc-gen-go=$(TOOLS_BIN)/protoc-gen-go \
 		--plugin=protoc-gen-go-grpc=$(TOOLS_BIN)/protoc-gen-go-grpc \
 		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
 		--go_out=testdata --go-grpc_out=testdata --proxy_out=testdata ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
 
-.PHONY: protoc/standalone
-protoc/standalone: build
+.PHONY: examples/spanner/standalone
+examples/spanner/standalone: build
 	protoc ${PROTOC_OPTION} \
 		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
 		--proxy_out=standalone=true,out=${PKG}:examples ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
