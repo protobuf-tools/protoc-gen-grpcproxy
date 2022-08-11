@@ -28,7 +28,7 @@ const FileNameSuffix = "_proxy.pb.go"
 // Config represents a protoc-gen-proxy config.
 type Config struct {
 	Standalone bool
-	OutGopath  string
+	Out        string
 }
 
 // GenerateFile generates DeepCopyInto() and DeepCopy() functions for .pb.go types.
