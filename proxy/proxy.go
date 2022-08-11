@@ -45,8 +45,8 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 	if cfg.Standalone && cfg.Out != "" {
 		goImportPath = protogen.GoImportPath(cfg.Out)
 	}
-	g := p.NewGeneratedFile(filename, goImportPath)
 
+	g := p.NewGeneratedFile(filename, goImportPath)
 	g.QualifiedGoIdent(contextPackage.Ident("Context"))
 	g.QualifiedGoIdent(errorsPackage.Ident("New"))
 	g.QualifiedGoIdent(netPackage.Ident("Addr"))
