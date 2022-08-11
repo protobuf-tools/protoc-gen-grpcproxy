@@ -44,10 +44,12 @@ func protocVersion(gen *protogen.Plugin) string {
 	if v == nil {
 		return "(unknown)"
 	}
+
 	var suffix string
 	if s := v.GetSuffix(); s != "" {
 		suffix = "-" + s
 	}
+
 	return fmt.Sprintf("v%d.%d.%d%s", v.GetMajor(), v.GetMinor(), v.GetPatch(), suffix)
 }
 
@@ -71,7 +73,7 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 
 	goPackageName := f.GoPackageName
 	if cfg.Standalone {
-		pbPackage = protogen.GoImportPath(f.GoImportPath)
+		pbPackage = f.GoImportPath
 		g.QualifiedGoIdent(pbPackage.Ident(""))
 		goPackageName += "proxy"
 	}
