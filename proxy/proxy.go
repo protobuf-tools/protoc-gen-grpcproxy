@@ -79,7 +79,7 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 	g.P("// - protoc-gen-proxy ", version)
 	g.P("// - protoc           ", protocVersion(p))
 	if f.Proto.GetOptions().GetDeprecated() {
-		g.P("// ", f.Desc.Path(), " is a deprecated file.")
+		g.P("// Deprecated: ", f.Desc.Path(), " is a deprecated file.")
 	} else {
 		g.P("// source: ", f.Desc.Path())
 	}
