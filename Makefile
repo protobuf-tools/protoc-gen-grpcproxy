@@ -112,8 +112,8 @@ coverage: ${TOOLS_BIN}/gotestsum  ## Takes packages test coverage.
 .PHONY: fmt
 fmt: ${TOOLS_BIN}/goimportz ${TOOLS_BIN}/gofumpt  ## Run goimportz and gofumpt.
 	$(call target)
-	${TOOLS_BIN}/goimportz -local=${PKG},${ORG_PKG} -w $(shell find . -iname "*.go" -not -iname "*pb..go" -not -path "./vendor/**")
-	${TOOLS_BIN}/gofumpt -s -extra -w $(shell find . -iname "*.go" -not -iname "*pb..go" -not -path "./vendor/**")
+	${TOOLS_BIN}/goimportz -local=${PKG},${ORG_PKG} -w $(shell find . -iname "*.go" -not -iname "*pb.go" -not -path "./vendor/**")
+	${TOOLS_BIN}/gofumpt -extra -w $(shell find . -iname "*.go" -not -iname "*pb.go" -not -path "./vendor/**")
 
 .PHONY: lint
 lint: lint/golangci-lint  ## Run all linters.
