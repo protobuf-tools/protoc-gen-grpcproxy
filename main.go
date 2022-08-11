@@ -17,7 +17,6 @@ func main() {
 
 	flags := flag.NewFlagSet("protoc-gen-proxy", flag.ExitOnError)
 	flags.BoolVar(&cfg.Standalone, "standalone", false, "standalone mode.")
-	flags.StringVar(&cfg.Out, "out", "", "output package name for standalone mode.")
 
 	opts := protogen.Options{
 		ParamFunc: flags.Set,
