@@ -131,7 +131,7 @@ ${TOOLS_BIN}/%: ${TOOLS_DIR}/go.sum ${TOOLS_DIR}/go.mod
 .PHONY: clean
 clean:  ## Cleanups binaries and extra files in the package.
 	$(call target)
-	@rm -rf *.out *.test *.prof trace.txt ${TOOLS_BIN}
+	@rm -rf *.out *.test *.prof trace.txt ./bin ${TOOLS_BIN}
 
 ##@ help
 
