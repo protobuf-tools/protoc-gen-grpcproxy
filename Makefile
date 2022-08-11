@@ -68,6 +68,10 @@ build: ${GOBIN}/$(notdir ${PKG})  ## Build binary.
 protoc:
 	PATH=${CURDIR}/bin:$$PATH protoc -I . -I ${HOME}/src/github.com/googleapis/googleapis --go_out=testdata --go-grpc_out=testdata --proxy_out=testdata ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
 
+.PHONY: protoc/standalone
+protoc/standalone:
+	PATH=${CURDIR}/bin:$$PATH protoc -I . -I ${HOME}/src/github.com/googleapis/googleapis --proxy_out=standalone=true,out=github.com/protobuf-tools/protoc-gen-proxy:./testdata ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
+
 ##@ test, bench, coverage
 
 .PHONY: test
