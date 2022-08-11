@@ -66,10 +66,6 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 	}
 
 	g := p.NewGeneratedFile(filename, goImportPath)
-	g.QualifiedGoIdent(contextPackage.Ident("Context"))
-	g.QualifiedGoIdent(errorsPackage.Ident("New"))
-	g.QualifiedGoIdent(netPackage.Ident("Addr"))
-	g.QualifiedGoIdent(grpcPackage.Ident("CallOption"))
 
 	goPackageName := f.GoPackageName
 	if cfg.Standalone {
@@ -118,28 +114,25 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 
 			input := method.Input.GoIdent.GoName
 			output := method.Output.GoIdent.GoName
-			if input == "Empty" || output == "Empty" {
-				g.QualifiedGoIdent(emptyPackage.Ident("Empty"))
-			}
 			if cfg.Standalone {
 				// handle emptypb
-				if input != "Empty" {
-					input = importPath + "." + input
+				if input != emptyPackage.Ident("Empty").GoName {
+					input = g.QualifiedGoIdent(pbPackage.Ident(string(method.Input.GoIdent.GoName)))
 				}
-				if output != "Empty" {
-					output = importPath + "." + output
+				if output != emptyPackage.Ident("Empty").GoName {
+					output = g.QualifiedGoIdent(pbPackage.Ident(string(method.Output.GoIdent.GoName)))
 				}
 			}
 
 			// handle emptypb
-			if input == "Empty" {
-				input = "emptypb.Empty"
+			if input == emptyPackage.Ident("Empty").GoName {
+				input = g.QualifiedGoIdent(emptyPackage.Ident("Empty"))
 			}
-			if output == "Empty" {
-				output = "emptypb.Empty"
+			if output == emptyPackage.Ident("Empty").GoName {
+				output = g.QualifiedGoIdent(emptyPackage.Ident("Empty"))
 			}
 
-			args := fmt.Sprintf(`(ctx context.Context, req *%s) (*%s, error)`, input, output)
+			args := fmt.Sprintf(`(ctx %s, req *%s) (*%s, error)`, g.QualifiedGoIdent(contextPackage.Ident("Context")), input, output)
 			if cfg.Standalone && mes.IsStreaming {
 				args = fmt.Sprintf(`(req *%s, srv %s_%sServer) error`, input, importPath+"."+serviceName, method.GoName)
 			}
@@ -156,7 +149,7 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		sort.Slice(sortMethods, func(i, j int) bool { return sortMethods[i].GoName < sortMethods[j].GoName })
 
 		serverName := "proxyServer"
-		g.P(`var ErrNotSupported = errors.New("operation not supported")`)
+		g.P(`var ErrNotSupported = `, g.QualifiedGoIdent(errorsPackage.Ident("New")), `("operation not supported")`)
 		g.P()
 		g.P(`type `, serverName, ` struct {`)
 		g.P(`	proxy *Proxy`)
@@ -191,8 +184,8 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		g.P(`}`)
 		g.P()
 		g.P(`// Serve starts serving the proxy server on the given listener with the specified options.`)
-		g.P(`func (p *Proxy) Serve(l net.Listener, opts ...grpc.ServerOption) error {`)
-		g.P(`	srv := grpc.NewServer(opts...)`)
+		g.P(`func (p *Proxy) Serve(l `, g.QualifiedGoIdent(netPackage.Ident("Listener")), `, opts ...grpc.ServerOption) error {`)
+		g.P(`	srv := `, g.QualifiedGoIdent(grpcPackage.Ident("NewServer")), `(opts...)`)
 		g.P(`	`, registerServerName, `(srv, &`, serverName, `{proxy: p})`)
 		g.P()
 		g.P(`	return srv.Serve(l)`)
