@@ -5,10 +5,11 @@
 package proxy
 
 import (
+	"cmp"
 	"fmt"
 	"path"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strconv"
 
 	"google.golang.org/protobuf/compiler/protogen"
@@ -90,10 +91,14 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 
 	services := f.Services
 	for i, service := range services {
-		sort.Slice(services[i].Methods, func(j, k int) bool { return services[i].Methods[j].GoName < services[i].Methods[k].GoName })
+		slices.SortFunc(services[i].Methods, func(x, y *protogen.Method) int {
+			return cmp.Compare(x.GoName, y.GoName)
+		})
 
+		svcName := string("/" + service.Desc.FullName())
 		for _, method := range service.Methods {
-			g.P(`	FullMethod`, method.GoName, ` = `, strconv.Quote(path.Join("/"+string(service.Desc.FullName()), string(method.Desc.Name()))))
+			fullMethod := path.Join(svcName, string(method.Desc.Name()))
+			g.P(`	FullMethod`, method.GoName, ` = `, strconv.Quote(fullMethod))
 		}
 		g.P(`)`)
 
@@ -146,7 +151,9 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 			sortMethods[i] = mes
 			i++
 		}
-		sort.Slice(sortMethods, func(i, j int) bool { return sortMethods[i].GoName < sortMethods[j].GoName })
+		slices.SortFunc(sortMethods, func(x, y Method) int {
+			return cmp.Compare(x.GoName, y.GoName)
+		})
 
 		serverName := "proxyServer"
 		g.P(`var ErrNotSupported = `, g.QualifiedGoIdent(errorsPackage.Ident("New")), `("operation not supported")`)
