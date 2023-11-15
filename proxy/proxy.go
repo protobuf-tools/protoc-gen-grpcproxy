@@ -58,7 +58,7 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		return nil
 	}
 
-	filename := f.GeneratedFilenamePrefix + "_proxy.pb.go"
+	filename := f.GeneratedFilenamePrefix + "_grpc.proxy.pb.go"
 	goImportPath := f.GoImportPath
 	if cfg.Standalone {
 		goImportPath = protogen.GoImportPath(".") // dummy path for import pb package
