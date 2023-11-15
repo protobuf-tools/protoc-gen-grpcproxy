@@ -85,7 +85,6 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 	g.P()
 	g.P(`package `, goPackageName)
 	g.P()
-	g.P(`const (`)
 
 	services := f.Services
 	for i, service := range services {
