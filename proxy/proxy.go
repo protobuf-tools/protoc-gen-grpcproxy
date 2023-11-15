@@ -9,20 +9,22 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"unicode"
 
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
 var version = "devel"
 
-// list of _proxy.pb.go files package dependencies.
+// List of _grpc.proxy.pb.go files package dependencies.
 const (
 	contextPackage = protogen.GoImportPath("context")
-	errorsPackage  = protogen.GoImportPath("errors")
 	netPackage     = protogen.GoImportPath("net")
 
-	emptyPackage = protogen.GoImportPath("google.golang.org/protobuf/types/known/emptypb")
-	grpcPackage  = protogen.GoImportPath("google.golang.org/grpc")
+	gRPCPackage    = protogen.GoImportPath("google.golang.org/grpc")
+	codesPackage   = protogen.GoImportPath("google.golang.org/grpc/codes")
+	statusPackage  = protogen.GoImportPath("google.golang.org/grpc/status")
+	emptypbPackage = protogen.GoImportPath("google.golang.org/protobuf/types/known/emptypb")
 )
 
 var pbPackage protogen.GoImportPath
@@ -111,20 +113,20 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 			output := method.Output.GoIdent.GoName
 			if cfg.Standalone {
 				// handle emptypb
-				if input != emptyPackage.Ident("Empty").GoName {
+				if input != emptypbPackage.Ident("Empty").GoName {
 					input = g.QualifiedGoIdent(pbPackage.Ident(string(method.Input.GoIdent.GoName)))
 				}
-				if output != emptyPackage.Ident("Empty").GoName {
+				if output != emptypbPackage.Ident("Empty").GoName {
 					output = g.QualifiedGoIdent(pbPackage.Ident(string(method.Output.GoIdent.GoName)))
 				}
 			}
 
 			// handle emptypb
-			if input == emptyPackage.Ident("Empty").GoName {
-				input = g.QualifiedGoIdent(emptyPackage.Ident("Empty"))
+			if input == emptypbPackage.Ident("Empty").GoName {
+				input = g.QualifiedGoIdent(emptypbPackage.Ident("Empty"))
 			}
-			if output == emptyPackage.Ident("Empty").GoName {
-				output = g.QualifiedGoIdent(emptyPackage.Ident("Empty"))
+			if output == emptypbPackage.Ident("Empty").GoName {
+				output = g.QualifiedGoIdent(emptypbPackage.Ident("Empty"))
 			}
 
 			args := fmt.Sprintf(`(ctx %s, req *%s) (*%s, error)`, g.QualifiedGoIdent(contextPackage.Ident("Context")), input, output)
@@ -145,23 +147,26 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 			return cmp.Compare(x.GoName, y.GoName)
 		})
 
-		serverName := "proxyServer"
-		g.P(`var ErrNotSupported = `, g.QualifiedGoIdent(errorsPackage.Ident("New")), `("operation not supported")`)
-		g.P()
-		g.P(`type `, serverName, ` struct {`)
-		g.P(`	proxy *Proxy`)
+		lowerServiceName := string(unicode.ToLower(rune(serviceName[0]))) + serviceName[1:]
+		proxyServer := lowerServiceName + "Proxy"
+		g.P(`type `, proxyServer, ` struct {`)
+		g.P(`	proxy *`, serviceName, `Proxy`)
 		g.P(`}`)
 		g.P()
+
+		statusErrorf := g.QualifiedGoIdent(statusPackage.Ident("Errorf"))
+		codesUnimplemented := g.QualifiedGoIdent(codesPackage.Ident("Unimplemented"))
 		for _, mes := range sortMethods {
 			args := methods[mes]
 
 			ret := `fn(ctx, req)`
-			retErr := `nil, ErrNotSupported`
+			unimplemented := fmt.Sprintf(`%s(%s, "method %s not implemented")`, statusErrorf, codesUnimplemented, mes.GoName)
+			retErr := `nil, ` + unimplemented
 			if mes.IsStreaming {
 				ret = `fn(req, srv)`
-				retErr = `ErrNotSupported`
+				retErr = unimplemented
 			}
-			g.P(`func (s *`, serverName, `) `, mes.GoName, args, ` {`)
+			g.P(`func (s *`, proxyServer, `) `, mes.GoName, args, ` {`)
 			g.P(`	fn := s.proxy.`, mes.GoName)
 			g.P(` 	if fn == nil {`)
 			g.P(` 		return `, retErr)
@@ -172,18 +177,23 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 			g.P()
 		}
 		g.P()
-		g.P(`// Proxy allows to create `, serviceName, ` proxy servers.`)
-		g.P(`type Proxy struct {`)
+
+		proxyType := serviceName + `Proxy`
+		g.P(`// `, proxyType, ` allows to create `, serviceName, ` proxy.`)
+		g.P(`type `, proxyType, ` struct {`)
 		for _, mes := range sortMethods {
 			args := methods[mes]
 			g.P(`	`, mes.GoName, ` func`, args)
 		}
 		g.P(`}`)
 		g.P()
-		g.P(`// Serve starts serving the proxy server on the given listener with the specified options.`)
-		g.P(`func (p *Proxy) Serve(l `, g.QualifiedGoIdent(netPackage.Ident("Listener")), `, opts ...grpc.ServerOption) error {`)
-		g.P(`	srv := `, g.QualifiedGoIdent(grpcPackage.Ident("NewServer")), `(opts...)`)
-		g.P(`	`, registerServerName, `(srv, &`, serverName, `{proxy: p})`)
+
+		netListener := g.QualifiedGoIdent(netPackage.Ident("Listener"))
+		gRPCServerOption := g.QualifiedGoIdent(gRPCPackage.Ident("ServerOption"))
+		g.P(`// Serve starts serving the proxy server on the given [`, netListener, `] with the specified options.`)
+		g.P(`func (p *`, serviceName, `Proxy) Serve(l `, netListener, `, opts ...`, gRPCServerOption, `) error {`)
+		g.P(`	srv := `, g.QualifiedGoIdent(gRPCPackage.Ident("NewServer")), `(opts...)`)
+		g.P(`	`, registerServerName, `(srv, &`, proxyServer, `{proxy: p})`)
 		g.P()
 		g.P(`	return srv.Serve(l)`)
 		g.P(`}`)
