@@ -7,10 +7,8 @@ package proxy
 import (
 	"cmp"
 	"fmt"
-	"path"
 	"path/filepath"
 	"slices"
-	"strconv"
 
 	"google.golang.org/protobuf/compiler/protogen"
 )
@@ -94,13 +92,6 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		slices.SortFunc(services[i].Methods, func(x, y *protogen.Method) int {
 			return cmp.Compare(x.GoName, y.GoName)
 		})
-
-		svcName := string("/" + service.Desc.FullName())
-		for _, method := range service.Methods {
-			fullMethod := path.Join(svcName, string(method.Desc.Name()))
-			g.P(`	FullMethod`, method.GoName, ` = `, strconv.Quote(fullMethod))
-		}
-		g.P(`)`)
 
 		serviceName := service.GoName
 		methods := make(map[Method]string)
