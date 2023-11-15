@@ -36,8 +36,9 @@ type Config struct {
 
 // Method represents a generated RPC method.
 type Method struct {
-	GoName      string
-	IsStreaming bool
+	GoName            string
+	IsStreamingClient bool
+	IsStreamingServer bool
 }
 
 func protocVersion(gen *protogen.Plugin) string {
@@ -105,8 +106,9 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 
 		for _, method := range service.Methods {
 			mes := Method{
-				GoName:      method.GoName,
-				IsStreaming: method.Desc.IsStreamingServer(),
+				GoName:            method.GoName,
+				IsStreamingClient: method.Desc.IsStreamingClient(),
+				IsStreamingServer: method.Desc.IsStreamingServer(),
 			}
 
 			input := method.Input.GoIdent.GoName
@@ -129,9 +131,22 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 				output = g.QualifiedGoIdent(emptypbPackage.Ident("Empty"))
 			}
 
-			args := fmt.Sprintf(`(ctx %s, req *%s) (*%s, error)`, g.QualifiedGoIdent(contextPackage.Ident("Context")), input, output)
-			if cfg.Standalone && mes.IsStreaming {
-				args = fmt.Sprintf(`(req *%s, srv %s_%sServer) error`, input, importPath+"."+serviceName, method.GoName)
+			var args string
+			switch {
+			case mes.IsStreamingClient:
+				srvName := serviceName
+				if cfg.Standalone {
+					srvName = importPath + "." + serviceName
+				}
+				args = fmt.Sprintf(`(srv %s_%sServer) error`, srvName, method.GoName)
+			case mes.IsStreamingServer:
+				srvName := serviceName
+				if cfg.Standalone {
+					srvName = importPath + "." + serviceName
+				}
+				args = fmt.Sprintf(`(req *%s, srv %s_%sServer) error`, input, srvName, method.GoName)
+			default:
+				args = fmt.Sprintf(`(ctx %s, req *%s) (*%s, error)`, g.QualifiedGoIdent(contextPackage.Ident("Context")), input, output)
 			}
 			methods[mes] = args
 		}
@@ -159,13 +174,20 @@ func GenerateFile(p *protogen.Plugin, f *protogen.File, cfg *Config) *protogen.G
 		for _, mes := range sortMethods {
 			args := methods[mes]
 
-			ret := `fn(ctx, req)`
 			unimplemented := fmt.Sprintf(`%s(%s, "method %s not implemented")`, statusErrorf, codesUnimplemented, mes.GoName)
-			retErr := `nil, ` + unimplemented
-			if mes.IsStreaming {
+			var ret, retErr string
+			switch {
+			case mes.IsStreamingClient:
+				ret = `fn(srv)`
+				retErr = unimplemented
+			case mes.IsStreamingServer:
 				ret = `fn(req, srv)`
 				retErr = unimplemented
+			default:
+				ret = `fn(ctx, req)`
+				retErr = `nil, ` + unimplemented
 			}
+
 			g.P(`func (s *`, proxyServer, `) `, mes.GoName, args, ` {`)
 			g.P(`	fn := s.proxy.`, mes.GoName)
 			g.P(` 	if fn == nil {`)
