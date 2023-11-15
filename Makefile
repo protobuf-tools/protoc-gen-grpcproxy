@@ -76,7 +76,7 @@ examples/spanner: build ${TOOLS_BIN}/protoc-gen-go ${TOOLS_BIN}/protoc-gen-go-gr
 	protoc ${PROTOC_OPTION} \
 		--plugin=protoc-gen-go=$(TOOLS_BIN)/protoc-gen-go \
 		--plugin=protoc-gen-go-grpc=$(TOOLS_BIN)/protoc-gen-go-grpc \
-		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
+		--plugin=protoc-gen-grpcproxy=${CURDIR}/bin/protoc-gen-grpcproxy \
 		--go_out=paths=source_relative:examples --go-grpc_out=paths=source_relative:examples --proxy_out=paths=source_relative:examples ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
 
 .PHONY: examples/spannerproxy
@@ -84,7 +84,7 @@ examples/spannerproxy: build
 	@rm -rf $@
 	@mkdir -p $@
 	protoc ${PROTOC_OPTION} \
-		--plugin=protoc-gen-proxy=${CURDIR}/bin/protoc-gen-proxy \
+		--plugin=protoc-gen-grpcproxy=${CURDIR}/bin/protoc-gen-grpcproxy \
 		--proxy_out=paths=source_relative,standalone=true:examples/spannerproxy ${HOME}/src/github.com/googleapis/googleapis/google/spanner/v1/*.proto
 	@cd $@/google/spanner/v1; \
 		go mod init > /dev/null 2>&1; \

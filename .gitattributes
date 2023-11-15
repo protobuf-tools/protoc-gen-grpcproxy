@@ -1,4 +1,4 @@
-# protobuf-tools/protoc-gen-proxy project gitattributes file
+# protobuf-tools/protoc-gen-grpcproxy project gitattributes file
 #  https://github.com/github/linguist/blob/master/docs/overrides.md
 
 * -text

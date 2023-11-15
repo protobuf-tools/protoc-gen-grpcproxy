@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Copyright 2022 The protobuf-tools Authors
 // SPDX-License-Identifier: BSD-3-Clause
 
-// Command protoc-gen-proxy generates RPC service proxy for .pb.go types.
+// Command protoc-gen-grpcproxy generates RPC service proxy for .pb.go types.
 package main
 
 import (
@@ -9,13 +9,13 @@ import (
 
 	"google.golang.org/protobuf/compiler/protogen"
 
-	"github.com/protobuf-tools/protoc-gen-proxy/proxy"
+	"github.com/protobuf-tools/protoc-gen-grpcproxy/proxy"
 )
 
 func main() {
 	cfg := &proxy.Config{}
 
-	flags := flag.NewFlagSet("protoc-gen-proxy", flag.ExitOnError)
+	flags := flag.NewFlagSet("protoc-gen-grpcproxy", flag.ExitOnError)
 	flags.BoolVar(&cfg.Standalone, "standalone", false, "standalone mode.")
 
 	opts := protogen.Options{

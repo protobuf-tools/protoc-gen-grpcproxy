@@ -1,4 +1,4 @@
-module github.com/protobuf-tools/protoc-gen-proxy/tools
+module github.com/protobuf-tools/protoc-gen-grpcproxy/tools
 
 go 1.19
 

@@ -1,4 +1,4 @@
-module github.com/protobuf-tools/protoc-gen-proxy/examples/spannerproxy/google/spanner/v1
+module github.com/protobuf-tools/protoc-gen-grpcproxy/examples/spannerproxy/google/spanner/v1
 
 go 1.19
 
